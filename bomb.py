@@ -68,7 +68,7 @@ def around(y, x):
     
     temp = field[top:bottom, strange:charm]
     print(temp)
-    print("Amount of Bombs near: " + str(temp.sum()))
+    print("Amount of Bombs near me: " + str(temp.sum()))
 
 
 if __name__ == "__main__":
