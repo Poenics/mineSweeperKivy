@@ -74,7 +74,8 @@ class GameBoard(GridLayout):
         super(GameBoard, self).__init__(**kwargs)
         self.rows = y
         self.cols = x
-        self.field = np.zeros((x, y), dtype=bool)
+        self.field = np.zeros((y,x), dtype=bool)
+        print(self.field)
 
         # Adjusts bomb count if ist less than zero or more than the amount of cells
         if bombs < 0:
@@ -96,7 +97,7 @@ class GameBoard(GridLayout):
         # adds cells
         for i in range(y):
             for j in range(x):
-                self.add_widget(Cell(self.field[j,i], (j,i), self))
+                self.add_widget(Cell(self.field[i,j], (j,i), self))
 
     
         
@@ -109,7 +110,7 @@ class MainMenu(BoxLayout):
         self.orientation = "vertical"
 
         # Adding Widgets
-        xinput = TextInput(hint_text = "Insert Board Width", text = "10")
+        xinput = TextInput(hint_text = "Insert Board Width", text = "20")
         yinput = TextInput(hint_text = "Insert Board height", text = "10")
         binput = TextInput(hint_text = "Insert Bomb Count", text = "20")
         startbutton = Button(text = "start")
