@@ -1,15 +1,29 @@
-from kivy.core import text
+import random
 import numpy as np
 import kivy
 from kivy.app import App
-from kivy.uix.label import Label
-from kivy.uix.gridlayout import GridLayout
+from kivy.core import text
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.label import Label
 from kivy.uix.popup import Popup
-import random
+from kivy.uix.textinput import TextInput
 
+"""
+TODO
+- Distinguish between flagging and revealing cell (double dropdown/ toggle button)
+- Reveal Cell when clicked
+- Flag Cell when clicked
+- Display surrounding Bomb Count
+- Display Bomb Icon
+- Display Flag Icon
+- Game over when revealing Bomb
+- Reveal surrounding Cells when revealing clear Cell
+- Win when only all bombs are flagged
+- Regenerate Board on Game End
+
+"""
 
 class Cell(Button):
     """Minesweeper Cell"""
