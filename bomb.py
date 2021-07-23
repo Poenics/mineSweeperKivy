@@ -25,95 +25,94 @@ TODO
 
 """
 
+
+class GameBoard(GridLayout):
+    """Holds all Cells"""
+    def __init__(self, width : int, height : int, bomb_count : int, **kwargs):
+        """Game Board Init"""
+        super(GameBoard, self).__init__(**kwargs)
+        self.rows = height
+        self.cols = width
+        self.field = np.zeros((height,width), dtype=bool)
+        print(self.field)
+
+        # Adjusts bomb count if ist less than zero or more than the amount of cells
+        if bomb_count < 0:
+            bomb_count = 0
+        if bomb_count > width*height:
+            bomb_count = width*height
+
+        # if bomb count is more than half of the cells, randomly removes bombs until bomb count is reached
+        # else randomly adds bombs until bomb count is reached
+        if bomb_count > 1/2 * width*height:
+            self.field = 1- self.field
+            cell_value = False
+        else:
+            cell_value = True
+        
+        while self.field.sum() != bomb_count:
+            self.field[random.randint(0,height-1)][random.randint(0,width-1)] = cell_value
+
+        # adds cells
+        for i in range(height):
+            for j in range(width):
+                self.add_widget(Cell(self.field[i,j], (j,i), self))
+
+    
 class Cell(Button):
     """Minesweeper Cell"""
-    def __init__(self, bomb, index, board, **kwargs):
+    def __init__(self, is_bomb : bool, index : "tuple[int, int]", board : GameBoard, **kwargs):
         """Minesweeper Cell init"""
         super(Cell, self).__init__(**kwargs)
         
         #Sets bomb-indicator and xy-position
-        self.is_bomb = bomb
-        self.xpos = index[0]
-        self.ypos = index[1]
-        self.board = board
-        self.text = f"{self.xpos} {self.ypos}"
+        self.is_bomb = is_bomb
+        self.x_index = index[0]
+        self.y_index = index[1]
+        self.game_board = board
+        self.text = f"{self.x_index} {self.y_index}"
         self.bind(on_release = self.pressed)
     
-    def pressed(self, instance):
+    def pressed(self, instance: Button):
         """Callback for the Cell"""
-        ind = (self.xpos, self.ypos)
+        index = (self.x_index, self.y_index)
         print("Index is: %s "% instance.text + "Bomb? " + str(self.is_bomb))
-        self.around(int(ind[0]), int(ind[1]))
+        self.around(int(index[0]), int(index[1]))
 
-    def around(self, x, y):
+    def around(self, x_index: int, y_index: int):
         """Gets Surrounding Cell Values and counts Bombs"""
-        temp = [[],[],[]]
-        width = self.board.cols -1 
-        height = self.board.rows -1
+        temp_list = [[],[],[]]
+        width = self.game_board.cols -1 
+        height = self.game_board.rows -1
 
-        temp[0].append(self.getval(y-1,x-1) if x>0 and y>0 else None)
-        print(temp[0][0])
-        temp[0].append(self.getval(y-1, x) if y>0 else None)
-        temp[0].append(self.getval(y-1, x+1) if x<width and y>0 else None)
+        temp_list[0].append(self.getval(y_index - 1, x_index - 1) if x_index > 0 and y_index > 0 else None)
+        temp_list[0].append(self.getval(y_index - 1, x_index) if y_index > 0 else None)
+        temp_list[0].append(self.getval(y_index - 1, x_index + 1) if x_index < width and y_index > 0 else None)
 
-        temp[1].append(self.getval(y,x-1) if x>0 else None)
-        temp[1].append(self.is_bomb)
-        temp[1].append(self.getval(y,x+1) if x<width else None)
+        temp_list[1].append(self.getval(y_index, x_index - 1) if x_index > 0 else None)
+        temp_list[1].append(self.is_bomb)
+        temp_list[1].append(self.getval(y_index, x_index + 1) if x_index < width else None)
         
-        temp[2].append(self.getval(y+1,x-1) if x > 0 and y<height else None)
-        temp[2].append(self.getval(y+1,x) if y<height else None)
-        temp[2].append(self.getval(y+1,x+1) if x<width and y<height else None)
+        temp_list[2].append(self.getval(y_index + 1, x_index - 1) if x_index > 0 and y_index < height else None)
+        temp_list[2].append(self.getval(y_index + 1, x_index) if y_index < height else None)
+        temp_list[2].append(self.getval(y_index + 1, x_index + 1) if x_index < width and y_index < height else None)
 
-        temp = np.array(temp)
-        print(temp)
-        print("Amount of Bombs near me: " + str(self.fieldsum(temp)-self.is_bomb))
+        temp_list = np.array(temp_list)
+        print(temp_list)
+        print("Amount of Bombs near me: " + str(self.fieldsum(temp_list)-self.is_bomb))
     
-    def getval(self, y,x):
+    def getval(self, y_index : int, x_index : int):
         """Gets field value"""
-        return self.board.field[y][x]
+        return self.game_board.field[y_index][x_index]
 
-    def fieldsum(self, field):
+    def fieldsum(self, field : np.array):
         """Sums the amount of bombs in a given field"""
-        num = 0
+        amount = 0
         for i in field:
             for j in i:
                 if j:
-                    num += 1
-        return num
-
-class GameBoard(GridLayout):
-    """Holds all Cells"""
-    def __init__(self, x, y, bombs, **kwargs):
-        """Game Board Init"""
-        super(GameBoard, self).__init__(**kwargs)
-        self.rows = y
-        self.cols = x
-        self.field = np.zeros((y,x), dtype=bool)
-        print(self.field)
-
-        # Adjusts bomb count if ist less than zero or more than the amount of cells
-        if bombs < 0:
-            bombs = 0
-        if bombs > x*y:
-            bombs = x*y-1
-
-        # if bomb count is more than half of the cells, randomly removes bombs until bomb count is reached
-        # else randomly adds bombs until bomb count is reached
-        if bombs > 1/2 * x*y:
-            self.field = 1- self.field
-            reverse = False
-        else:
-            reverse = True
-        
-        while self.field.sum() != bombs:
-            self.field[random.randint(0,y-1)][random.randint(0,x-1)] = reverse
-
-        # adds cells
-        for i in range(y):
-            for j in range(x):
-                self.add_widget(Cell(self.field[i,j], (j,i), self))
-
-    
+                    amount += 1
+        return amount
         
 
 class MainMenu(BoxLayout):
@@ -124,37 +123,50 @@ class MainMenu(BoxLayout):
         self.orientation = "vertical"
 
         # Adding Widgets
-        xinput = TextInput(hint_text = "Insert Board Width", text = "20")
-        yinput = TextInput(hint_text = "Insert Board height", text = "10")
-        binput = TextInput(hint_text = "Insert Bomb Count", text = "20")
+        width_input = TextInput(hint_text = "Insert Board Width", text = "20")
+        height_input = TextInput(hint_text = "Insert Board height", text = "10")
+        bomb_input = TextInput(hint_text = "Insert Bomb Count", text = "20")
         startbutton = Button(text = "start")
-        startbutton.bind(on_release = lambda x: self.startGame(int(xinput.text), int(yinput.text), int(binput.text)))
+        startbutton.bind(on_release = lambda x: self.startGame(width_input.text, height_input.text, bomb_input.text))
 
-        self.add_widget(xinput)
-        self.add_widget(yinput)
-        self.add_widget(binput)
+        self.add_widget(width_input)
+        self.add_widget(height_input)
+        self.add_widget(bomb_input)
         self.add_widget(startbutton)
     
-    def startGame(self, x, y, bombs):
+    def startGame(self, width : str, height : str, bomb_count : str):
         """Opens Popup and starts Minesweeper Game"""
+        try:
+            width = int(width)
+        except:
+            width = 10
+        try:
+            height = int(height)
+        except:
+            height = 10
+        try:
+            bomb_count = int(bomb_count)
+        except:
+            bomb_count = 30
+        
         layout = BoxLayout(orientation = "vertical")
         game = Popup(title = "Game", content = layout)
 
         back = Button(text = "Back", size_hint_y = 0.1)
         back.bind(on_release = game.dismiss)
 
-        layout.add_widget(GameBoard(x, y, bombs))
+        layout.add_widget(GameBoard(width, height, bomb_count))
         layout.add_widget(back)
 
         game.open()
 
 
-class MyApp(App):
+class MinesweeperApp(App):
     def build(self):
         return MainMenu()
 
 if __name__ == "__main__":
-    MyApp().run()
+    MinesweeperApp().run()
 
 
 
