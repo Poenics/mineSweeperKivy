@@ -48,6 +48,7 @@ class ToolBar(BoxLayout):
         """Init for ToolBar"""
         super().__init__(**kwargs)
         self.orientation = "horizontal"
+        self.size_hint_y = 0.05
         self.reveal = ToggleButton(text = shovel_icon, group = "tool", state = "down")
         self.reveal.font_name = "celltext.ttf"
         self.reveal.background_normal = "normal.png"
@@ -60,7 +61,6 @@ class ToolBar(BoxLayout):
         self.flag.background_down = "down.png"
         self.flag.color = (0,0,0,1)
         self.add_widget(self.flag)
-        self.size_hint_y = 0.05
 
     def isFlaggingEnabled(self) -> bool:
         """Returns if the Flag Button is enabled or not"""
@@ -124,6 +124,7 @@ class Cell(Button):
         # Sets bomb-indicator and xy-position
         self.is_bomb = is_bomb
         self.is_flagged = False
+        self.is_revealed = False
         self.x_index = index[0]
         self.y_index = index[1]
         self.game_board = board
@@ -140,7 +141,7 @@ class Cell(Button):
         self.background_disabled_normal = "down.png"
 
     
-    def pressed(self, instance: Button):
+    def pressed(self, instance: Button = None):
         """Callback for the Cell"""
         # index = (self.x_index, self.y_index)
         # print("Index is: %s "% str(index) + "Bomb? " + str(self.is_bomb))
@@ -151,7 +152,13 @@ class Cell(Button):
             self.is_bomb = False
             self.game_board.first_reveal = False
         
-        if not flagging_enabled and self.is_bomb:
+        if self.is_revealed and flagging_enabled:
+            return
+        elif self.is_revealed and self.getFlagNeighbours() == self.getBombNeighbours() and instance:
+            for i in self.getNeighboursFlat():
+                if i != self and not i.is_flagged and not i.is_revealed:
+                    i.pressed()
+        elif not flagging_enabled and self.is_bomb:
             self.game_board.lose()
         elif not flagging_enabled and not self.is_flagged:
             self.updateDisplay()
@@ -208,9 +215,36 @@ class Cell(Button):
         temp_list = np.array(temp_list)
         return temp_list
     
+    def getNeighboursFlat(self, x_index: int = -1, y_index: int = -1):
+        """Gets Surrounding Cells and returns them"""
+        temp_list = []
+        width = self.game_board.cols -1 
+        height = self.game_board.rows -1
+        y_index = self.y_index if y_index == -1 else y_index
+        x_index = self.x_index if x_index == -1 else x_index
+
+        temp_list.append(self.getval(y_index - 1, x_index - 1) if x_index > 0 and y_index > 0 else None)
+        temp_list.append(self.getval(y_index - 1, x_index) if y_index > 0 else None)
+        temp_list.append(self.getval(y_index - 1, x_index + 1) if x_index < width and y_index > 0 else None)
+
+        temp_list.append(self.getval(y_index, x_index - 1) if x_index > 0 else None)
+        temp_list.append(self)
+        temp_list.append(self.getval(y_index, x_index + 1) if x_index < width else None)
+        
+        temp_list.append(self.getval(y_index + 1, x_index - 1) if x_index > 0 and y_index < height else None)
+        temp_list.append(self.getval(y_index + 1, x_index) if y_index < height else None)
+        temp_list.append(self.getval(y_index + 1, x_index + 1) if x_index < width and y_index < height else None)
+
+        temp_list = np.array(temp_list)
+        return temp_list
+    
     def getBombNeighbours(self):
         """Returns the amount of Bomb Neighbours"""
         return self.fieldsum(self.getNeighbours()) - self.is_bomb
+        
+    def getFlagNeighbours(self):
+        """Returns the amount of Flag Neighbours"""
+        return self.flagsum(self.getNeighbours()) - self.is_flagged
     
     def getval(self, y_index : int, x_index : int):
         """Gets field value"""
@@ -245,6 +279,8 @@ class Cell(Button):
         self.font_name = "celltext.ttf"
         self.text = flag_icon
         self.color = flag_color
+        self.disabled_color = flag_color
+        self.background_disabled_normal = "normal.png"
         self.background_normal = "normal.png"
 
     def display_bomb(self):
@@ -266,67 +302,75 @@ class Cell(Button):
 
     def display_one(self):
         """Displays the One"""
-        self.disabled = True
+        self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "1"
         self.disabled_color = one_color
+        self.color = one_color
         self.bold = True
         self.background_normal = "down.png"
 
     def display_two(self):
         """Displays the Two"""
-        self.disabled = True
+        self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "2"
         self.disabled_color = two_color
+        self.color = two_color
         self.background_normal = "down.png"
 
     def display_three(self):
         """Displays the Three"""
-        self.disabled = True
+        self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "3"
         self.disabled_color = three_color
+        self.color = three_color
         self.background_normal = "down.png"
 
     def display_four(self):
         """Displays the Four"""
-        self.disabled = True
+        self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "4"
         self.disabled_color = four_color
+        self.color = four_color
         self.background_normal = "down.png"
     
     def display_five(self):
         """Displays the Five"""
-        self.disabled = True
+        self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "5"
         self.disabled_color = five_color
+        self.color = five_color
         self.background_normal = "down.png"
 
     def display_six(self):
         """Displays the Six"""
-        self.disabled = True
+        self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "6"
         self.disabled_color = six_color
+        self.color = six_color
         self.background_normal = "down.png"
 
     def display_seven(self):
         """Displays the Seven"""
-        self.disabled = True
+        self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "7"
         self.disabled_color = seven_color
+        self.color = seven_color
         self.background_normal = "down.png"
 
     def display_eight(self):
         """Displays the Eight"""
-        self.disabled = True
+        self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "8"
         self.disabled_color = eight_color
+        self.color = eight_color
         self.background_normal = "down.png"
     
     def conceal(self):
@@ -337,6 +381,12 @@ class Cell(Button):
     
     def updateDisplay(self):
         """Updates Display based on Neighbours and bomb status"""
+        if self.is_revealed:
+            return
+        if self.is_flagged and self.is_bomb:
+            self.display_flag()
+            return
+        self.is_revealed = True
         display_list = [self.display_zero, self.display_one, self.display_two, self.display_three, self.display_four, self.display_five, self.display_six, self.display_seven, self.display_eight ]
         bomb_neighbours = self.getBombNeighbours()
 
