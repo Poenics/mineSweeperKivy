@@ -12,16 +12,17 @@ from kivy.uix.textinput import TextInput
 
 """
 TODO
-- Distinguish between flagging and revealing cell (double dropdown/ toggle button)
+- Distinguish between flagging and revealing cell (double dropdown/toggle button)
 - Reveal Cell when clicked
 - Flag Cell when clicked
-- Display surrounding Bomb Count
+- Display surrounding Bomb Count and change background color
 - Display Bomb Icon
 - Display Flag Icon
 - Game over when revealing Bomb
 - Reveal surrounding Cells when revealing clear Cell
-- Win when only all bombs are flagged
+- Win once only all bombs are flagged
 - Regenerate Board on Game End
+- maybe also Timer and Highscores
 
 """
 
@@ -80,7 +81,7 @@ class Cell(Button):
         """Minesweeper Cell init"""
         super(Cell, self).__init__(**kwargs)
         
-        #Sets bomb-indicator and xy-position
+        # Sets bomb-indicator and xy-position
         self.is_bomb = is_bomb
         self.x_index = index[0]
         self.y_index = index[1]
