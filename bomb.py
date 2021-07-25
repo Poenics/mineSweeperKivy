@@ -271,18 +271,18 @@ class MainMenu(BoxLayout):
         self.orientation = "vertical"
 
         # Adding Widgets
-        width_input = TextInput(hint_text = "Insert Board Width", text = "20")
+        width_input = TextInput(hint_text = "Insert Board Width", text = "20", multiline=False)
         width_input.background_normal = "normal.png"
         width_input.background_active = "normal.png"
         width_input.background_color = (1.1,1.1,1.1,1)
         width_input.halign = "center"
         width_input.valign = "middle"
-        height_input = TextInput(hint_text = "Insert Board height", text = "20")
+        height_input = TextInput(hint_text = "Insert Board height", text = "20", multiline=False)
         height_input.background_normal = "normal.png"
         height_input.background_active = "normal.png"
         height_input.background_color = (1.1,1.1,1.1,1)
         height_input.halign = "center"
-        bomb_input = TextInput(hint_text = "Insert Bomb Count", text = "99")
+        bomb_input = TextInput(hint_text = "Insert Bomb Count", text = "99", multiline=False)
         bomb_input.background_normal = "normal.png"
         bomb_input.background_active = "normal.png"
         bomb_input.background_color = (1.1,1.1,1.1,1)
