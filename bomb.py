@@ -72,7 +72,7 @@ class GameBoard(GridLayout):
             for j in range(width):
                 self.add_widget(Cell(self.field[i,j], (j,i), self))
         for i in self.children:
-            i.updateDisplay()
+            i.conceal()
 
     
 class Cell(Button):
@@ -94,6 +94,7 @@ class Cell(Button):
             self.display_bomb()
         else:
             self.display_flag()
+        self.background_down = "down.png"
 
     
     def pressed(self, instance: Button):
@@ -170,18 +171,21 @@ class Cell(Button):
         self.font_name = "celltext.ttf"
         self.text = flag_icon
         self.color = flag_color
+        self.background_normal = "down.png"
 
     def display_bomb(self):
         """Displays the Bomb"""
         self.font_name = "celltext.ttf"
         self.text = bomb_icon
         self.color = bomb_color
+        self.background_normal = "down.png"
 
     def display_zero(self):
         """Displays the Zero"""
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = ""
         self.color = (0,0,0,1)
+        self.background_normal = "down.png"
 
     def display_one(self):
         """Displays the One"""
@@ -189,52 +193,61 @@ class Cell(Button):
         self.text = "1"
         self.color = one_color
         self.bold = True
+        self.background_normal = "down.png"
 
     def display_two(self):
         """Displays the Two"""
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "2"
         self.color = two_color
+        self.background_normal = "down.png"
 
     def display_three(self):
         """Displays the Three"""
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "3"
         self.color = three_color
+        self.background_normal = "down.png"
 
     def display_four(self):
         """Displays the Four"""
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "4"
         self.color = four_color
+        self.background_normal = "down.png"
     
     def display_five(self):
         """Displays the Five"""
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "5"
         self.color = five_color
+        self.background_normal = "down.png"
 
     def display_six(self):
         """Displays the Six"""
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "6"
         self.color = six_color
+        self.background_normal = "down.png"
 
     def display_seven(self):
         """Displays the Seven"""
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "7"
         self.color = seven_color
+        self.background_normal = "down.png"
 
     def display_eight(self):
         """Displays the Eight"""
         self.font_name = "data/fonts/Roboto-Regular.ttf"
         self.text = "8"
         self.color = eight_color
+        self.background_normal = "down.png"
     
     def conceal(self):
         """Makes the Cell text blank"""
         self.display_zero()
+        self.background_normal = "normal.png"
     
     def updateDisplay(self):
         """Updates Display based on Neighbours and bomb status"""
