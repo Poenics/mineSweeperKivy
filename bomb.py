@@ -23,7 +23,7 @@ TODO
 - Win once only all bombs are flagged
 - Regenerate Board on Game End
 - maybe also Timer and Highscores
-
+- Bild Lizensen?
 """
 
 flag_icon = ""
@@ -272,10 +272,27 @@ class MainMenu(BoxLayout):
 
         # Adding Widgets
         width_input = TextInput(hint_text = "Insert Board Width", text = "20")
+        width_input.background_normal = "normal.png"
+        width_input.background_active = "normal.png"
+        width_input.background_color = (1.1,1.1,1.1,1)
+        width_input.halign = "center"
+        width_input.valign = "middle"
         height_input = TextInput(hint_text = "Insert Board height", text = "20")
+        height_input.background_normal = "normal.png"
+        height_input.background_active = "normal.png"
+        height_input.background_color = (1.1,1.1,1.1,1)
+        height_input.halign = "center"
         bomb_input = TextInput(hint_text = "Insert Bomb Count", text = "99")
+        bomb_input.background_normal = "normal.png"
+        bomb_input.background_active = "normal.png"
+        bomb_input.background_color = (1.1,1.1,1.1,1)
+        bomb_input.halign = "center"
         startbutton = Button(text = "start")
         startbutton.bind(on_release = lambda x: self.startGame(width_input.text, height_input.text, bomb_input.text))
+        startbutton.background_normal = "normal.png"
+        startbutton.background_down = "down.png"
+        startbutton.background_color = (.8,.8,.8,1)
+        startbutton.color = (0,0,0,1)
 
         self.add_widget(width_input)
         self.add_widget(height_input)
@@ -302,6 +319,10 @@ class MainMenu(BoxLayout):
 
         back = Button(text = "Back", size_hint_y = 0.1)
         back.bind(on_release = game.dismiss)
+        back.background_normal = "normal.png"
+        back.background_down = "down.png"
+        back.color = (0,0,0,1)
+        back.background_color = (.8,.8,.8,1)
 
         layout.add_widget(GameBoard(width, height, bomb_count))
         layout.add_widget(back)
