@@ -25,6 +25,19 @@ TODO
 
 """
 
+flag_icon = ""
+flag_color = (1, 0, 0, 1)
+bomb_icon = ""
+bomb_color = (0, 0, 0, 1)
+one_color = (0, 0, 1, 1)
+two_color = (0, 0.5, 0, 1)
+three_color = (1, 0, 0, 1)
+four_color = (0, 0, 0.5, 1)
+five_color = (0.5, 0, 0, 1)
+six_color = (0, 0.5, 0.5, 1)
+seven_color = (0, 0, 0, 1)
+eight_color = (0.5, 0.5, 0.5, 1)
+
 
 class GameBoard(GridLayout):
     """Holds all Cells"""
@@ -57,6 +70,8 @@ class GameBoard(GridLayout):
         for i in range(height):
             for j in range(width):
                 self.add_widget(Cell(self.field[i,j], (j,i), self))
+        for i in self.children:
+            i.updateDisplay()
 
     
 class Cell(Button):
@@ -72,12 +87,20 @@ class Cell(Button):
         self.game_board = board
         self.text = f"{self.x_index} {self.y_index}"
         self.bind(on_release = self.pressed)
+        self.font_name = "celltext.ttf"
+        # random.choice([lambda : [setattr(self, "text", flag_icon), setattr(self, "color", (150,1,1,1))], lambda : [setattr(self, "text", bomb_icon), setattr(self, "color", (1,1,1,1))], ])()
+        if self.is_bomb:
+            self.display_bomb()
+        else:
+            self.display_flag()
+
     
     def pressed(self, instance: Button):
         """Callback for the Cell"""
         index = (self.x_index, self.y_index)
-        print("Index is: %s "% instance.text + "Bomb? " + str(self.is_bomb))
+        print("Index is: %s "% str(index) + "Bomb? " + str(self.is_bomb))
         self.around(int(index[0]), int(index[1]))
+        self.updateDisplay()
 
     def around(self, x_index: int, y_index: int):
         """Gets Surrounding Cell Values and counts Bombs"""
@@ -101,6 +124,33 @@ class Cell(Button):
         print(temp_list)
         print("Amount of Bombs near me: " + str(self.fieldsum(temp_list)-self.is_bomb))
     
+    def getNeighbours(self, x_index: int = -1, y_index: int = -1):
+        """Gets Surrounding Cells and returns them"""
+        temp_list = [[],[],[]]
+        width = self.game_board.cols -1 
+        height = self.game_board.rows -1
+        y_index = self.y_index if y_index == -1 else y_index
+        x_index = self.x_index if x_index == -1 else x_index
+
+        temp_list[0].append(self.getval(y_index - 1, x_index - 1) if x_index > 0 and y_index > 0 else None)
+        temp_list[0].append(self.getval(y_index - 1, x_index) if y_index > 0 else None)
+        temp_list[0].append(self.getval(y_index - 1, x_index + 1) if x_index < width and y_index > 0 else None)
+
+        temp_list[1].append(self.getval(y_index, x_index - 1) if x_index > 0 else None)
+        temp_list[1].append(self.is_bomb)
+        temp_list[1].append(self.getval(y_index, x_index + 1) if x_index < width else None)
+        
+        temp_list[2].append(self.getval(y_index + 1, x_index - 1) if x_index > 0 and y_index < height else None)
+        temp_list[2].append(self.getval(y_index + 1, x_index) if y_index < height else None)
+        temp_list[2].append(self.getval(y_index + 1, x_index + 1) if x_index < width and y_index < height else None)
+
+        temp_list = np.array(temp_list)
+        return temp_list
+    
+    def getBombNeighbours(self):
+        """Returns the amount of Bomb Neighbours"""
+        return self.fieldsum(self.getNeighbours()) - self.is_bomb
+    
     def getval(self, y_index : int, x_index : int):
         """Gets field value"""
         return self.game_board.field[y_index][x_index]
@@ -113,8 +163,92 @@ class Cell(Button):
                 if j:
                     amount += 1
         return amount
-        
 
+    def display_flag(self):
+        """Displays the Flag"""
+        self.font_name = "celltext.ttf"
+        self.text = flag_icon
+        self.color = flag_color
+
+    def display_bomb(self):
+        """Displays the Bomb"""
+        self.font_name = "celltext.ttf"
+        self.text = bomb_icon
+        self.color = bomb_color
+
+    def display_zero(self):
+        """Displays the Zero"""
+        self.font_name = "data/fonts/Roboto-Regular.ttf"
+        self.text = ""
+        self.color = (0,0,0,1)
+
+    def display_one(self):
+        """Displays the One"""
+        self.font_name = "data/fonts/Roboto-Regular.ttf"
+        self.text = "1"
+        self.color = one_color
+        self.bold = True
+
+    def display_two(self):
+        """Displays the Two"""
+        self.font_name = "data/fonts/Roboto-Regular.ttf"
+        self.text = "2"
+        self.color = two_color
+
+    def display_three(self):
+        """Displays the Three"""
+        self.font_name = "data/fonts/Roboto-Regular.ttf"
+        self.text = "3"
+        self.color = three_color
+
+    def display_four(self):
+        """Displays the Four"""
+        self.font_name = "data/fonts/Roboto-Regular.ttf"
+        self.text = "4"
+        self.color = four_color
+    
+    def display_five(self):
+        """Displays the Five"""
+        self.font_name = "data/fonts/Roboto-Regular.ttf"
+        self.text = "5"
+        self.color = five_color
+
+    def display_six(self):
+        """Displays the Six"""
+        self.font_name = "data/fonts/Roboto-Regular.ttf"
+        self.text = "6"
+        self.color = six_color
+
+    def display_seven(self):
+        """Displays the Seven"""
+        self.font_name = "data/fonts/Roboto-Regular.ttf"
+        self.text = "7"
+        self.color = seven_color
+
+    def display_eight(self):
+        """Displays the Eight"""
+        self.font_name = "data/fonts/Roboto-Regular.ttf"
+        self.text = "8"
+        self.color = eight_color
+    
+    def conceal(self):
+        """Makes the Cell text blank"""
+        self.display_zero()
+    
+    def updateDisplay(self):
+        """Updates Display based on Neighbours and bomb status"""
+        display_list = [self.display_zero, self.display_one, self.display_two, self.display_three, self.display_four, self.display_five, self.display_six, self.display_seven, self.display_eight ]
+        bomb_neighbours = self.getBombNeighbours()
+
+        # Prevents a 3x3 square of bombs
+        if bomb_neighbours == 8 and self.is_bomb:
+            self.is_bomb = False
+        
+        if self.is_bomb:
+            self.display_bomb()
+        else:
+            display_list[bomb_neighbours]()
+        
 class MainMenu(BoxLayout):
     """Main Menu for the Minesweeper App"""
     def __init__(self, **kwargs):
@@ -124,8 +258,8 @@ class MainMenu(BoxLayout):
 
         # Adding Widgets
         width_input = TextInput(hint_text = "Insert Board Width", text = "20")
-        height_input = TextInput(hint_text = "Insert Board height", text = "10")
-        bomb_input = TextInput(hint_text = "Insert Bomb Count", text = "20")
+        height_input = TextInput(hint_text = "Insert Board height", text = "20")
+        bomb_input = TextInput(hint_text = "Insert Bomb Count", text = "99")
         startbutton = Button(text = "start")
         startbutton.bind(on_release = lambda x: self.startGame(width_input.text, height_input.text, bomb_input.text))
 
@@ -139,15 +273,15 @@ class MainMenu(BoxLayout):
         try:
             width = int(width)
         except:
-            width = 10
+            width = 20
         try:
             height = int(height)
         except:
-            height = 10
+            height = 20
         try:
             bomb_count = int(bomb_count)
         except:
-            bomb_count = 30
+            bomb_count = 99
         
         layout = BoxLayout(orientation = "vertical")
         game = Popup(title = "Game", content = layout)
