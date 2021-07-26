@@ -24,11 +24,11 @@ TODO
 - DONE: Display surrounding Bomb Count and change background color
 - DONE: Display Bomb Icon
 - DONE: Display Flag Icon
-- WIP: Game over when revealing Bomb
-- Reveal surrounding Cells when revealing clear Cell
+- DONE: Game over when revealing Bomb
+- DONE: Reveal surrounding Cells when revealing clear Cell
 - Win once only all bombs are flagged
 - Regenerate Board on Game End
-- maybe also Timer and Highscores
+- WIP: maybe also Timer and Highscores
 - Bild Lizensen?
 """
 
