@@ -11,6 +11,10 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.textinput import TextInput
 from kivy.uix.togglebutton import ToggleButton
+from kivy.graphics import Color, Rectangle
+from numpy.core.fromnumeric import size
+import threading
+import time
 
 """
 TODO
@@ -42,6 +46,52 @@ six_color = (0, 0.5, 0.5, 1)
 seven_color = (0, 0, 0, 1)
 eight_color = (0.5, 0.5, 0.5, 1)
 
+class StatusLabel(Label):
+    """Label that displays a few useful informations, e.g. Timer, Bombs left,..."""
+    # def on_size(self, *args):
+    #     self.canvas.before.clear()
+    #     with self.canvas.before:
+    #         # Color(0, 1, 0, 0.25)
+    #         print(self.size, self.pos)
+    #         Rectangle(pos=self.pos, size=self.size, source = "down.png")
+    def __init__(self, **kwargs):
+        """Status Label init"""
+        super().__init__(**kwargs)
+        self.thread = threading.Thread(target = self.timer)
+        self.running = True
+        self.time = 0
+        self.bomb_count = 0
+
+    def on_pos(self, *args):
+        """Updates the Label color"""
+        self.canvas.before.clear()
+        with self.canvas.before:
+            Color(0.75, 0.75, 0.75, 1)
+            Rectangle(pos=self.pos, size=self.size)
+            self.color = (0,0,0,1)
+        
+    def updateText(self):
+        """Updates Label text"""
+        self.text = f"{self.time // 60}:{self.time % 60:02d}      Bombs remaining: {self.bomb_count}"
+
+    def timer(self):
+        """Function called by Thread, maintains Timer"""
+        while self.running:
+            time.sleep(1)
+            self.time  += 1
+            self.updateText()
+        
+    def startTimer(self):
+        """Starts the internal Thread"""
+        self.running = True
+        self.thread.start()
+
+    def stopTimer(self):
+        """Stops the internal Thread"""
+        self.running = False
+    
+
+
 class ToolBar(BoxLayout):
     """Tool Bar for switching cell modes or displaying information"""
     def __init__(self, **kwargs):
@@ -49,18 +99,23 @@ class ToolBar(BoxLayout):
         super().__init__(**kwargs)
         self.orientation = "horizontal"
         self.size_hint_y = 0.05
+
         self.reveal = ToggleButton(text = shovel_icon, group = "tool", state = "down")
         self.reveal.font_name = "celltext.ttf"
         self.reveal.background_normal = "normal.png"
         self.reveal.background_down = "down.png"
         self.reveal.color = (0,0,0,1)
         self.add_widget(self.reveal)
+
         self.flag = ToggleButton(text = flag_icon, group = "tool")
         self.flag.font_name = "celltext.ttf"
         self.flag.background_normal = "normal.png"
         self.flag.background_down = "down.png"
         self.flag.color = (0,0,0,1)
         self.add_widget(self.flag)
+
+        self.status_label = StatusLabel(text = "0:00", size_hint_x = 2)
+        self.add_widget(self.status_label)
 
     def isFlaggingEnabled(self) -> bool:
         """Returns if the Flag Button is enabled or not"""
@@ -86,6 +141,7 @@ class GameBoard(GridLayout):
         if bomb_count > width*height:
             bomb_count = width*height
         self.bomb_count = bomb_count
+        self.tool_bar.status_label.bomb_count = self.bomb_count
 
         # if bomb count is more than half of the cells, randomly removes bombs until bomb count is reached
         # else randomly adds bombs until bomb count is reached
@@ -108,10 +164,13 @@ class GameBoard(GridLayout):
 
         for i in self.children:
             i.conceal()
+        
     def lose(self):
+        """Game Over function"""
         for i in self.children:
             i.disabled = True
-            i.updateDisplay()
+            i.reveal()
+        self.tool_bar.status_label.stopTimer()
     
 
     
@@ -146,28 +205,60 @@ class Cell(Button):
         # index = (self.x_index, self.y_index)
         # print("Index is: %s "% str(index) + "Bomb? " + str(self.is_bomb))
         # self.around(int(index[0]), int(index[1]))
-        flagging_enabled = self.game_board.tool_bar.isFlaggingEnabled()
-        if self.game_board.first_reveal and not flagging_enabled:
+        if self.game_board.first_reveal:
             self.game_board.bomb_count -= self.is_bomb
+            self.game_board.tool_bar.status_label.bomb_count -= self.is_bomb
             self.is_bomb = False
             self.game_board.first_reveal = False
-        
-        if self.is_revealed and flagging_enabled:
+            self.reveal()
+            self.game_board.tool_bar.status_label.startTimer()
             return
-        elif self.is_revealed and self.getFlagNeighbours() == self.getBombNeighbours() and instance:
-            for i in self.getNeighboursFlat():
-                if i != self and not i.is_flagged and not i.is_revealed:
+        # print("he")
+        flagging_enabled = self.game_board.tool_bar.isFlaggingEnabled()
+        
+        if flagging_enabled:
+            if self.is_revealed:
+                return
+            elif self.is_flagged:
+                self.is_flagged = False
+                self.conceal()
+            else:
+                self.is_flagged = True
+                self.display_flag()
+        else:
+            if self.is_flagged:
+                return
+            elif self.is_revealed and self.getFlagNeighbours() == self.getBombNeighbours():
+                neigbours = list(filter(lambda x: not x.is_flagged and not x.is_revealed and not x == self,self.getNeighboursFlat()))
+                for i in neigbours:
                     i.pressed()
-        elif not flagging_enabled and self.is_bomb:
-            self.game_board.lose()
-        elif not flagging_enabled and not self.is_flagged:
-            self.updateDisplay()
-        elif flagging_enabled and not self.is_flagged:
-            self.is_flagged = True
-            self.display_flag()
-        elif flagging_enabled:
-            self.conceal()
-            self.is_flagged = False
+            elif self.is_revealed:
+                return
+            elif self.is_bomb:
+                self.game_board.lose()
+            else:
+                self.reveal()
+                
+
+
+        # if self.is_bomb and self.is_flagged and not flagging_enabled:
+        #     return
+        # if self.is_revealed and flagging_enabled:
+        #     return
+        # elif self.is_revealed and self.getFlagNeighbours() == self.getBombNeighbours() and instance:
+        #     for i in self.getNeighboursFlat():
+        #         if i != self and not i.is_flagged and not i.is_revealed:
+        #             i.pressed()
+        # elif not flagging_enabled and self.is_bomb:
+        #     self.game_board.lose()
+        # elif not flagging_enabled and not self.is_flagged:
+        #     self.updateDisplay()
+        # elif flagging_enabled and not self.is_flagged:
+        #     self.is_flagged = True
+        #     self.display_flag()
+        # elif flagging_enabled:
+        #     self.conceal()
+        #     self.is_flagged = False
         
 
     def around(self, x_index: int, y_index: int):
@@ -398,6 +489,19 @@ class Cell(Button):
             self.display_bomb()
         else:
             display_list[bomb_neighbours]()
+    
+    def reveal(self):
+        """Reveals Cell"""
+        self.is_revealed = True
+        display_list = [self.display_zero, self.display_one, self.display_two, self.display_three, self.display_four, self.display_five, self.display_six, self.display_seven, self.display_eight ]
+        bomb_neighbours = self.getBombNeighbours()
+
+        if self.is_bomb and self.is_flagged:
+            self.display_flag()
+        elif self.is_bomb:
+            self.display_bomb()
+        else:
+            display_list[bomb_neighbours]()
         
 class MainMenu(BoxLayout):
     """Main Menu for the Minesweeper App"""
@@ -405,7 +509,6 @@ class MainMenu(BoxLayout):
         """Constructing Main Menu"""
         super().__init__(**kwargs)
         self.orientation = "vertical"
-
         # Adding Widgets
         width_input = TextInput(hint_text = "Insert Board Width", text = "20", multiline=False)
         width_input.background_normal = "normal.png"
@@ -434,6 +537,7 @@ class MainMenu(BoxLayout):
         self.add_widget(height_input)
         self.add_widget(bomb_input)
         self.add_widget(startbutton)
+
     
     def startGame(self, width : str, height : str, bomb_count : str):
         """Opens Popup and starts Minesweeper Game"""
@@ -456,7 +560,7 @@ class MainMenu(BoxLayout):
         tool_bar = ToolBar()
         layout.add_widget(tool_bar)
         back = Button(text = "Back", size_hint_y = 0.1)
-        back.bind(on_release = game.dismiss)
+        back.bind(on_release = lambda x: [game.dismiss(x), tool_bar.status_label.stopTimer()])
         back.background_normal = "normal.png"
         back.background_down = "down.png"
         back.color = (0,0,0,1)
