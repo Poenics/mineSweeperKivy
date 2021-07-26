@@ -26,7 +26,7 @@ TODO
 - DONE: Display Flag Icon
 - DONE: Game over when revealing Bomb
 - DONE: Reveal surrounding Cells when revealing clear Cell
-- Win once only all bombs are flagged
+- DONE Win once only all bombs are flagged
 - Regenerate Board on Game End
 - WIP: maybe also Timer and Highscores
 - Bild Lizensen?
@@ -72,7 +72,7 @@ class StatusLabel(Label):
         
     def updateText(self):
         """Updates Label text"""
-        self.text = f"{self.time // 60}:{self.time % 60:02d}      Bombs remaining: {self.bomb_count}"
+        self.text = f"{self.time // 60}:{self.time % 60:02d}      Flags remaining: {self.bomb_count}"
 
     def timer(self):
         """Function called by Thread, maintains Timer"""
@@ -141,6 +141,7 @@ class GameBoard(GridLayout):
         if bomb_count > width*height:
             bomb_count = width*height
         self.bomb_count = bomb_count
+        self.progress = bomb_count
         self.tool_bar.status_label.bomb_count = self.bomb_count
 
         # if bomb count is more than half of the cells, randomly removes bombs until bomb count is reached
@@ -164,7 +165,12 @@ class GameBoard(GridLayout):
 
         for i in self.children:
             i.conceal()
-        
+    
+    def winCheck(self):
+        """Checks, if Progress is 0"""
+        if self.progress == 0:
+            self.win()
+
     def lose(self):
         """Game Over function"""
         for i in self.children:
@@ -172,6 +178,12 @@ class GameBoard(GridLayout):
             i.reveal()
         self.tool_bar.status_label.stopTimer()
     
+    def win(self):
+        """Game Won function"""
+        for i in self.children:
+            i.disabled = True
+            i.reveal()
+        self.tool_bar.status_label.stopTimer()
 
     
 class Cell(Button):
@@ -207,6 +219,7 @@ class Cell(Button):
         # self.around(int(index[0]), int(index[1]))
         if self.game_board.first_reveal:
             self.game_board.bomb_count -= self.is_bomb
+            self.game_board.progress -= self.is_bomb
             self.game_board.tool_bar.status_label.bomb_count -= self.is_bomb
             self.is_bomb = False
             self.game_board.first_reveal = False
@@ -222,9 +235,21 @@ class Cell(Button):
             elif self.is_flagged:
                 self.is_flagged = False
                 self.conceal()
+                self.game_board.tool_bar.status_label.bomb_count += 1
+                if self.is_bomb:
+                    self.game_board.progress += 1
+                else:
+                    self.game_board.progress -= 1
+                self.game_board.winCheck()
             else:
                 self.is_flagged = True
                 self.display_flag()
+                self.game_board.tool_bar.status_label.bomb_count -= 1
+                if self.is_bomb:
+                    self.game_board.progress -= 1
+                else:
+                    self.game_board.progress += 1
+                self.game_board.winCheck()
         else:
             if self.is_flagged:
                 return
@@ -238,6 +263,7 @@ class Cell(Button):
                 self.game_board.lose()
             else:
                 self.cascade()
+
                 
 
 
