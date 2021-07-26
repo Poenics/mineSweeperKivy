@@ -210,7 +210,7 @@ class Cell(Button):
             self.game_board.tool_bar.status_label.bomb_count -= self.is_bomb
             self.is_bomb = False
             self.game_board.first_reveal = False
-            self.reveal()
+            self.cascade()
             self.game_board.tool_bar.status_label.startTimer()
             return
         # print("he")
@@ -231,13 +231,13 @@ class Cell(Button):
             elif self.is_revealed and self.getFlagNeighbours() == self.getBombNeighbours():
                 neigbours = list(filter(lambda x: not x.is_flagged and not x.is_revealed and not x == self,self.getNeighboursFlat()))
                 for i in neigbours:
-                    i.pressed()
+                    i.cascade()
             elif self.is_revealed:
                 return
             elif self.is_bomb:
                 self.game_board.lose()
             else:
-                self.reveal()
+                self.cascade()
                 
 
 
@@ -313,6 +313,7 @@ class Cell(Button):
         height = self.game_board.rows -1
         y_index = self.y_index if y_index == -1 else y_index
         x_index = self.x_index if x_index == -1 else x_index
+        
 
         temp_list.append(self.getval(y_index - 1, x_index - 1) if x_index > 0 and y_index > 0 else None)
         temp_list.append(self.getval(y_index - 1, x_index) if y_index > 0 else None)
@@ -327,7 +328,33 @@ class Cell(Button):
         temp_list.append(self.getval(y_index + 1, x_index + 1) if x_index < width and y_index < height else None)
 
         temp_list = np.array(temp_list)
-        return temp_list
+        pre_proc_list = list(filter(lambda x: x is not None, temp_list))
+        return pre_proc_list
+    
+    def getNeighboursCascade(self, x_index: int = -1, y_index: int = -1):
+        """Gets Orthogonal Cells and returns them"""
+        temp_list = []
+        width = self.game_board.cols -1 
+        height = self.game_board.rows -1
+        y_index = self.y_index if y_index == -1 else y_index
+        x_index = self.x_index if x_index == -1 else x_index
+        
+
+        temp_list.append(self.getval(y_index - 1, x_index - 1) if x_index > 0 and y_index > 0 else None)
+        temp_list.append(self.getval(y_index - 1, x_index) if y_index > 0 else None)
+        temp_list.append(self.getval(y_index - 1, x_index + 1) if x_index < width and y_index > 0 else None)
+
+        temp_list.append(self.getval(y_index, x_index - 1) if x_index > 0 else None)
+        temp_list.append(self)
+        temp_list.append(self.getval(y_index, x_index + 1) if x_index < width else None)
+        
+        temp_list.append(self.getval(y_index + 1, x_index - 1) if x_index > 0 and y_index < height else None)
+        temp_list.append(self.getval(y_index + 1, x_index) if y_index < height else None)
+        temp_list.append(self.getval(y_index + 1, x_index + 1) if x_index < width and y_index < height else None)
+
+        temp_list = np.array(temp_list)
+        pre_proc_list = list(filter(lambda x: x is not None, temp_list))
+        return pre_proc_list
     
     def getBombNeighbours(self):
         """Returns the amount of Bomb Neighbours"""
@@ -502,6 +529,21 @@ class Cell(Button):
             self.display_bomb()
         else:
             display_list[bomb_neighbours]()
+    
+    def cascade(self):
+        if self.is_bomb:
+            self.game_board.lose()
+            return
+        self.reveal()
+        neigbours = list(filter(lambda x: not x.is_flagged and not x.is_revealed and not x == self and not x.is_bomb,self.getNeighboursCascade()))
+        if self.getBombNeighbours() == 0:
+            for i in neigbours:
+                i.cascade()
+        else:
+            neigbours = list(filter(lambda x: x.getBombNeighbours() == 0, neigbours))
+            for i in neigbours:
+                i.cascade()
+
         
 class MainMenu(BoxLayout):
     """Main Menu for the Minesweeper App"""
