@@ -87,6 +87,10 @@ class StatusLabel(Button):
     def stopTimer(self):
         """Stops the internal Thread"""
         self.running = False
+
+    def getScore(self, width, height, bomb_count):
+        """Returns the score"""
+        return int(1/(self.time+1) + 1) * width * height * bomb_count
     
 
 
@@ -175,6 +179,20 @@ class GameBoard(GridLayout):
             i.disabled = True
             i.reveal()
         self.tool_bar.status_label.stopTimer()
+        layout = BoxLayout(orientation = "vertical")
+        game = Popup(title = "Game Over", content = layout, size_hint_y = 0.2, size_hint_x = 0.35, title_align = "center")
+
+        back = Button(text = "Back", size_hint_y = 0.1)
+        back.bind(on_release = lambda x: [game.dismiss(x)])
+        back.background_normal = "normal.png"
+        back.background_down = "down.png"
+        back.color = (0,0,0,1)
+        back.background_color = (.8,.8,.8,1)
+
+        layout.add_widget(back)
+
+        game.open()
+
     
     def win(self):
         """Game Won function"""
@@ -182,6 +200,19 @@ class GameBoard(GridLayout):
             i.disabled = True
             i.reveal()
         self.tool_bar.status_label.stopTimer()
+        layout = BoxLayout(orientation = "vertical")
+        game = Popup(title = f"You Won! Score: {self.tool_bar.status_label.getScore(self.cols, self.rows, self.bomb_count)}", content = layout, size_hint_y = 0.2, size_hint_x = 0.35, title_align = "center")
+
+        back = Button(text = "Back", size_hint_y = 0.1)
+        back.bind(on_release = lambda x: [game.dismiss(x)])
+        back.background_normal = "normal.png"
+        back.background_down = "down.png"
+        back.color = (0,0,0,1)
+        back.background_color = (.8,.8,.8,1)
+
+        layout.add_widget(back)
+
+        game.open()
 
     
 class Cell(Button):
@@ -625,7 +656,8 @@ class MainMenu(BoxLayout):
             bomb_count = 99
         
         layout = BoxLayout(orientation = "vertical")
-        game = Popup(title = "Game", content = layout)
+        game = Popup(title = "", content = layout)
+        game.separator_height = 0
 
         tool_bar = ToolBar()
         layout.add_widget(tool_bar)
