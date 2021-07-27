@@ -70,7 +70,7 @@ class StatusLabel(Button):
         
     def updateText(self):
         """Updates Label text"""
-        self.text = f"{self.time // 60}:{self.time % 60:02d}      Flags remaining: {self.bomb_count}"
+        self.text = f"{self.time // 60}:{self.time % 60:02d} | Flags remaining: {self.bomb_count}"
 
     def timer(self):
         """Function called by Thread, maintains Timer"""
@@ -576,13 +576,13 @@ class MainMenu(BoxLayout):
         super().__init__(**kwargs)
         self.orientation = "vertical"
         # Adding Widgets
-        width_input = TextInput(hint_text = "Insert Board Width", text = "20", multiline=False)
+        width_input = TextInput(hint_text = "Insert Board Width (max 20, min 2)", text = "20", multiline=False)
         width_input.background_normal = "normal.png"
         width_input.background_active = "normal.png"
         width_input.background_color = (1.1,1.1,1.1,1)
         width_input.halign = "center"
         width_input.valign = "middle"
-        height_input = TextInput(hint_text = "Insert Board height", text = "20", multiline=False)
+        height_input = TextInput(hint_text = "Insert Board height (max 20, min 2)", text = "20", multiline=False)
         height_input.background_normal = "normal.png"
         height_input.background_active = "normal.png"
         height_input.background_color = (1.1,1.1,1.1,1)
@@ -609,10 +609,14 @@ class MainMenu(BoxLayout):
         """Opens Popup and starts Minesweeper Game"""
         try:
             width = int(width)
+            if width > 20 or width < 2:
+                width = 20
         except:
             width = 20
         try:
             height = int(height)
+            if height > 20 or height < 2:
+                height = 20
         except:
             height = 20
         try:
