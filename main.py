@@ -1,18 +1,13 @@
-from os import stat
 import random
 import numpy as np
-import kivy
 from kivy.app import App
-from kivy.core import text
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.textinput import TextInput
 from kivy.uix.togglebutton import ToggleButton
 from kivy.graphics import Color, Rectangle
-from numpy.core.fromnumeric import size
 import threading
 import time
 
