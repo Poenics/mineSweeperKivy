@@ -1,4 +1,5 @@
 import random
+from kivy.uix.widget import Widget
 import numpy as np
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -78,6 +79,7 @@ class StatusLabel(Button):
             time.sleep(1)
             self.time  += 1
             self.updateText()
+        self.time = 0
         
     def startTimer(self):
         """Starts the internal Thread"""
@@ -90,7 +92,14 @@ class StatusLabel(Button):
 
     def getScore(self, width, height, bomb_count):
         """Returns the score"""
-        return int(1/(self.time+1) + 1) * width * height * bomb_count
+        return int(1/(self.time+1) * width * height * bomb_count + 1)
+
+    def reset(self):
+        """Resets the Status Label"""
+        self.stopTimer()
+        self.thread = threading.Thread(target = self.timer)
+        self.bomb_count = 0
+        self.text = "0:00"
     
 
 
@@ -125,6 +134,10 @@ class ToolBar(BoxLayout):
             return False
         elif self.flag.state == "down":
             return True
+    
+    def reset(self):
+        """Resets the Toolbar"""
+        self.status_label.reset()
 
 class GameBoard(GridLayout):
     """Holds all Cells"""
@@ -134,6 +147,48 @@ class GameBoard(GridLayout):
         self.tool_bar = tool_bar
         self.rows = height
         self.cols = width
+        self.field = np.zeros((height,width), dtype=bool)
+        self.first_reveal = True
+        self.init_bomb_count = bomb_count
+
+        # Adjusts bomb count if ist less than zero or more than the amount of cells
+        if bomb_count < 0:
+            bomb_count = 0
+        if bomb_count > width*height:
+            bomb_count = width*height
+        self.bomb_count = bomb_count
+        self.progress = bomb_count
+        self.tool_bar.status_label.bomb_count = self.bomb_count
+
+        # if bomb count is more than half of the cells, randomly removes bombs until bomb count is reached
+        # else randomly adds bombs until bomb count is reached
+        if bomb_count > 1/2 * width*height:
+            self.field = 1- self.field
+            cell_value = False
+        else:
+            cell_value = True
+        
+        while self.field.sum() != bomb_count:
+            self.field[random.randint(0,height-1)][random.randint(0,width-1)] = cell_value
+
+        self.field = list(map(lambda x: list(x), self.field))
+        # adds cells
+        for i in range(height):
+            for j in range(width):
+                cell = Cell(self.field[i][j], (j,i), self)
+                self.add_widget(cell)
+                self.field[i][j] = cell
+
+        for i in self.children:
+            i.conceal()
+    
+    def restart(self):
+        """Restarts The Game"""
+        self.clear_widgets()
+        bomb_count = self.init_bomb_count
+        width = self.cols
+        height = self.rows
+        self.tool_bar.reset()
         self.field = np.zeros((height,width), dtype=bool)
         self.first_reveal = True
 
@@ -167,7 +222,7 @@ class GameBoard(GridLayout):
 
         for i in self.children:
             i.conceal()
-    
+
     def winCheck(self):
         """Checks, if Progress is 0"""
         if self.progress == 0:
@@ -182,8 +237,8 @@ class GameBoard(GridLayout):
         layout = BoxLayout(orientation = "vertical")
         game = Popup(title = "Game Over", content = layout, size_hint_y = 0.2, size_hint_x = 0.35, title_align = "center")
 
-        back = Button(text = "Back", size_hint_y = 0.1)
-        back.bind(on_release = lambda x: [game.dismiss(x)])
+        back = Button(text = "Restart", size_hint_y = 0.1)
+        back.bind(on_release = lambda x: [game.dismiss(x), self.restart()])
         back.background_normal = "normal.png"
         back.background_down = "down.png"
         back.color = (0,0,0,1)
@@ -203,8 +258,8 @@ class GameBoard(GridLayout):
         layout = BoxLayout(orientation = "vertical")
         game = Popup(title = f"You Won! Score: {self.tool_bar.status_label.getScore(self.cols, self.rows, self.bomb_count)}", content = layout, size_hint_y = 0.2, size_hint_x = 0.35, title_align = "center")
 
-        back = Button(text = "Back", size_hint_y = 0.1)
-        back.bind(on_release = lambda x: [game.dismiss(x)])
+        back = Button(text = "Restart", size_hint_y = 0.1)
+        back.bind(on_release = lambda x: [game.dismiss(x), self.restart()])
         back.background_normal = "normal.png"
         back.background_down = "down.png"
         back.color = (0,0,0,1)
@@ -660,16 +715,16 @@ class MainMenu(BoxLayout):
         game.separator_height = 0
 
         tool_bar = ToolBar()
-        layout.add_widget(tool_bar)
         back = Button(text = "Back", size_hint_y = 0.1)
         back.bind(on_release = lambda x: [game.dismiss(x), tool_bar.status_label.stopTimer()])
         back.background_normal = "normal.png"
         back.background_down = "down.png"
         back.color = (0,0,0,1)
         back.background_color = (.8,.8,.8,1)
+        layout.add_widget(back)
+        layout.add_widget(tool_bar)
 
         layout.add_widget(GameBoard(width, height, bomb_count, tool_bar))
-        layout.add_widget(back)
 
         game.open()
 
