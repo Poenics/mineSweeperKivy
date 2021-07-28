@@ -1,5 +1,4 @@
 import random
-from kivy.uix.widget import Widget
 import numpy as np
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -8,7 +7,6 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.popup import Popup
 from kivy.uix.textinput import TextInput
 from kivy.uix.togglebutton import ToggleButton
-from kivy.graphics import Color, Rectangle
 import threading
 import time
 
@@ -23,9 +21,9 @@ TODO
 - DONE: Game over when revealing Bomb
 - DONE: Reveal surrounding Cells when revealing clear Cell
 - DONE Win once only all bombs are flagged
-- Regenerate Board on Game End
-- WIP: maybe also Timer and Highscores
-- Bild Lizensen?
+- DONE: Regenerate Board on Game End
+- DONE: maybe also Timer and Highscores
+- DONE: Bild Lizensen?
 """
 
 shovel_icon = ""
@@ -44,12 +42,6 @@ eight_color = (0.5, 0.5, 0.5, 1)
 
 class StatusLabel(Button):
     """Label that displays a few useful informations, e.g. Timer, Bombs left,..."""
-    # def on_size(self, *args):
-    #     self.canvas.before.clear()
-    #     with self.canvas.before:
-    #         # Color(0, 1, 0, 0.25)
-    #         print(self.size, self.pos)
-    #         Rectangle(pos=self.pos, size=self.size, source = "down.png")
     def __init__(self, **kwargs):
         """Status Label init"""
         super().__init__(**kwargs)
@@ -60,14 +52,6 @@ class StatusLabel(Button):
         self.disabled = True
         self.background_disabled_normal = "down.png"
         self.color = (0,0,0,1)
-
-    # def on_pos(self, *args):
-    #     """Updates the Label color"""
-    #     self.canvas.before.clear()
-    #     with self.canvas.before:
-    #         Color(0.75, 0.75, 0.75, 1)
-    #         Rectangle(pos=self.pos, size=self.size)
-    #         self.color = (0,0,0,1)
         
     def updateText(self):
         """Updates Label text"""
@@ -288,9 +272,9 @@ class Cell(Button):
         self.font_name = "celltext.ttf"
         # random.choice([lambda : [setattr(self, "text", flag_icon), setattr(self, "color", (150,1,1,1))], lambda : [setattr(self, "text", bomb_icon), setattr(self, "color", (1,1,1,1))], ])()
         if self.is_bomb:
-            self.display_bomb()
+            self.displayBomb()
         else:
-            self.display_flag()
+            self.displayFlag()
         self.background_down = "down.png"
         self.background_disabled_down = "down.png"
         self.background_disabled_normal = "down.png"
@@ -327,7 +311,7 @@ class Cell(Button):
                 self.game_board.winCheck()
             else:
                 self.is_flagged = True
-                self.display_flag()
+                self.displayFlag()
                 self.game_board.tool_bar.status_label.bomb_count -= 1
                 if self.is_bomb:
                     self.game_board.progress -= 1
@@ -346,30 +330,7 @@ class Cell(Button):
             elif self.is_bomb:
                 self.game_board.lose()
             else:
-                self.cascade()
-
-                
-
-
-        # if self.is_bomb and self.is_flagged and not flagging_enabled:
-        #     return
-        # if self.is_revealed and flagging_enabled:
-        #     return
-        # elif self.is_revealed and self.getFlagNeighbours() == self.getBombNeighbours() and instance:
-        #     for i in self.getNeighboursFlat():
-        #         if i != self and not i.is_flagged and not i.is_revealed:
-        #             i.pressed()
-        # elif not flagging_enabled and self.is_bomb:
-        #     self.game_board.lose()
-        # elif not flagging_enabled and not self.is_flagged:
-        #     self.updateDisplay()
-        # elif flagging_enabled and not self.is_flagged:
-        #     self.is_flagged = True
-        #     self.display_flag()
-        # elif flagging_enabled:
-        #     self.conceal()
-        #     self.is_flagged = False
-        
+                self.cascade()       
 
     def around(self, x_index: int, y_index: int):
         """Gets Surrounding Cell Values and counts Bombs"""
@@ -377,21 +338,21 @@ class Cell(Button):
         width = self.game_board.cols -1 
         height = self.game_board.rows -1
 
-        temp_list[0].append(self.getval(y_index - 1, x_index - 1) if x_index > 0 and y_index > 0 else None)
-        temp_list[0].append(self.getval(y_index - 1, x_index) if y_index > 0 else None)
-        temp_list[0].append(self.getval(y_index - 1, x_index + 1) if x_index < width and y_index > 0 else None)
+        temp_list[0].append(self.getCell(y_index - 1, x_index - 1) if x_index > 0 and y_index > 0 else None)
+        temp_list[0].append(self.getCell(y_index - 1, x_index) if y_index > 0 else None)
+        temp_list[0].append(self.getCell(y_index - 1, x_index + 1) if x_index < width and y_index > 0 else None)
 
-        temp_list[1].append(self.getval(y_index, x_index - 1) if x_index > 0 else None)
+        temp_list[1].append(self.getCell(y_index, x_index - 1) if x_index > 0 else None)
         temp_list[1].append(self.is_bomb)
-        temp_list[1].append(self.getval(y_index, x_index + 1) if x_index < width else None)
+        temp_list[1].append(self.getCell(y_index, x_index + 1) if x_index < width else None)
         
-        temp_list[2].append(self.getval(y_index + 1, x_index - 1) if x_index > 0 and y_index < height else None)
-        temp_list[2].append(self.getval(y_index + 1, x_index) if y_index < height else None)
-        temp_list[2].append(self.getval(y_index + 1, x_index + 1) if x_index < width and y_index < height else None)
+        temp_list[2].append(self.getCell(y_index + 1, x_index - 1) if x_index > 0 and y_index < height else None)
+        temp_list[2].append(self.getCell(y_index + 1, x_index) if y_index < height else None)
+        temp_list[2].append(self.getCell(y_index + 1, x_index + 1) if x_index < width and y_index < height else None)
 
         temp_list = np.array(temp_list)
         print(temp_list)
-        print("Amount of Bombs near me: " + str(self.fieldsum(temp_list)-self.is_bomb))
+        print("Amount of Bombs near me: " + str(self.fieldSum(temp_list)-self.is_bomb))
     
     def getNeighbours(self, x_index: int = -1, y_index: int = -1):
         """Gets Surrounding Cells and returns them"""
@@ -401,17 +362,17 @@ class Cell(Button):
         y_index = self.y_index if y_index == -1 else y_index
         x_index = self.x_index if x_index == -1 else x_index
 
-        temp_list[0].append(self.getval(y_index - 1, x_index - 1) if x_index > 0 and y_index > 0 else None)
-        temp_list[0].append(self.getval(y_index - 1, x_index) if y_index > 0 else None)
-        temp_list[0].append(self.getval(y_index - 1, x_index + 1) if x_index < width and y_index > 0 else None)
+        temp_list[0].append(self.getCell(y_index - 1, x_index - 1) if x_index > 0 and y_index > 0 else None)
+        temp_list[0].append(self.getCell(y_index - 1, x_index) if y_index > 0 else None)
+        temp_list[0].append(self.getCell(y_index - 1, x_index + 1) if x_index < width and y_index > 0 else None)
 
-        temp_list[1].append(self.getval(y_index, x_index - 1) if x_index > 0 else None)
+        temp_list[1].append(self.getCell(y_index, x_index - 1) if x_index > 0 else None)
         temp_list[1].append(self)
-        temp_list[1].append(self.getval(y_index, x_index + 1) if x_index < width else None)
+        temp_list[1].append(self.getCell(y_index, x_index + 1) if x_index < width else None)
         
-        temp_list[2].append(self.getval(y_index + 1, x_index - 1) if x_index > 0 and y_index < height else None)
-        temp_list[2].append(self.getval(y_index + 1, x_index) if y_index < height else None)
-        temp_list[2].append(self.getval(y_index + 1, x_index + 1) if x_index < width and y_index < height else None)
+        temp_list[2].append(self.getCell(y_index + 1, x_index - 1) if x_index > 0 and y_index < height else None)
+        temp_list[2].append(self.getCell(y_index + 1, x_index) if y_index < height else None)
+        temp_list[2].append(self.getCell(y_index + 1, x_index + 1) if x_index < width and y_index < height else None)
 
         temp_list = np.array(temp_list)
         return temp_list
@@ -425,17 +386,17 @@ class Cell(Button):
         x_index = self.x_index if x_index == -1 else x_index
         
 
-        temp_list.append(self.getval(y_index - 1, x_index - 1) if x_index > 0 and y_index > 0 else None)
-        temp_list.append(self.getval(y_index - 1, x_index) if y_index > 0 else None)
-        temp_list.append(self.getval(y_index - 1, x_index + 1) if x_index < width and y_index > 0 else None)
+        temp_list.append(self.getCell(y_index - 1, x_index - 1) if x_index > 0 and y_index > 0 else None)
+        temp_list.append(self.getCell(y_index - 1, x_index) if y_index > 0 else None)
+        temp_list.append(self.getCell(y_index - 1, x_index + 1) if x_index < width and y_index > 0 else None)
 
-        temp_list.append(self.getval(y_index, x_index - 1) if x_index > 0 else None)
+        temp_list.append(self.getCell(y_index, x_index - 1) if x_index > 0 else None)
         temp_list.append(self)
-        temp_list.append(self.getval(y_index, x_index + 1) if x_index < width else None)
+        temp_list.append(self.getCell(y_index, x_index + 1) if x_index < width else None)
         
-        temp_list.append(self.getval(y_index + 1, x_index - 1) if x_index > 0 and y_index < height else None)
-        temp_list.append(self.getval(y_index + 1, x_index) if y_index < height else None)
-        temp_list.append(self.getval(y_index + 1, x_index + 1) if x_index < width and y_index < height else None)
+        temp_list.append(self.getCell(y_index + 1, x_index - 1) if x_index > 0 and y_index < height else None)
+        temp_list.append(self.getCell(y_index + 1, x_index) if y_index < height else None)
+        temp_list.append(self.getCell(y_index + 1, x_index + 1) if x_index < width and y_index < height else None)
 
         temp_list = np.array(temp_list)
         pre_proc_list = list(filter(lambda x: x is not None, temp_list))
@@ -450,17 +411,17 @@ class Cell(Button):
         x_index = self.x_index if x_index == -1 else x_index
         
 
-        temp_list.append(self.getval(y_index - 1, x_index - 1) if x_index > 0 and y_index > 0 else None)
-        temp_list.append(self.getval(y_index - 1, x_index) if y_index > 0 else None)
-        temp_list.append(self.getval(y_index - 1, x_index + 1) if x_index < width and y_index > 0 else None)
+        temp_list.append(self.getCell(y_index - 1, x_index - 1) if x_index > 0 and y_index > 0 else None)
+        temp_list.append(self.getCell(y_index - 1, x_index) if y_index > 0 else None)
+        temp_list.append(self.getCell(y_index - 1, x_index + 1) if x_index < width and y_index > 0 else None)
 
-        temp_list.append(self.getval(y_index, x_index - 1) if x_index > 0 else None)
+        temp_list.append(self.getCell(y_index, x_index - 1) if x_index > 0 else None)
         temp_list.append(self)
-        temp_list.append(self.getval(y_index, x_index + 1) if x_index < width else None)
+        temp_list.append(self.getCell(y_index, x_index + 1) if x_index < width else None)
         
-        temp_list.append(self.getval(y_index + 1, x_index - 1) if x_index > 0 and y_index < height else None)
-        temp_list.append(self.getval(y_index + 1, x_index) if y_index < height else None)
-        temp_list.append(self.getval(y_index + 1, x_index + 1) if x_index < width and y_index < height else None)
+        temp_list.append(self.getCell(y_index + 1, x_index - 1) if x_index > 0 and y_index < height else None)
+        temp_list.append(self.getCell(y_index + 1, x_index) if y_index < height else None)
+        temp_list.append(self.getCell(y_index + 1, x_index + 1) if x_index < width and y_index < height else None)
 
         temp_list = np.array(temp_list)
         pre_proc_list = list(filter(lambda x: x is not None, temp_list))
@@ -468,18 +429,18 @@ class Cell(Button):
     
     def getBombNeighbours(self):
         """Returns the amount of Bomb Neighbours"""
-        return self.fieldsum(self.getNeighbours()) - self.is_bomb
+        return self.fieldSum(self.getNeighbours()) - self.is_bomb
         
     def getFlagNeighbours(self):
         """Returns the amount of Flag Neighbours"""
-        return self.flagsum(self.getNeighbours()) - self.is_flagged
+        return self.flagSum(self.getNeighbours()) - self.is_flagged
     
-    def getval(self, y_index : int, x_index : int):
+    def getCell(self, y_index : int, x_index : int):
         """Gets field value"""
         return self.game_board.field[y_index][x_index]
 
     @staticmethod
-    def fieldsum(field):
+    def fieldSum(field):
         """Sums the amount of bombs in a given field"""
         amount = 0
         for i in field:
@@ -491,7 +452,7 @@ class Cell(Button):
         return amount
 
     @staticmethod
-    def flagsum(field):
+    def flagSum(field):
         """Sums the amount of flagged cells in a given field"""
         amount = 0
         for i in field:
@@ -502,7 +463,7 @@ class Cell(Button):
                     amount += j.is_flagged
         return amount
 
-    def display_flag(self):
+    def displayFlag(self):
         """Displays the Flag"""
         self.font_name = "celltext.ttf"
         self.text = flag_icon
@@ -511,7 +472,7 @@ class Cell(Button):
         self.background_disabled_normal = "normal.png"
         self.background_normal = "normal.png"
 
-    def display_bomb(self):
+    def displayBomb(self):
         """Displays the Bomb"""
         self.disabled = True
         self.font_name = "celltext.ttf"
@@ -520,7 +481,7 @@ class Cell(Button):
         self.background_disabled_normal = "normal.png"
         self.background_normal = "normal.png"
 
-    def display_zero(self):
+    def displayZero(self):
         """Displays the Zero"""
         self.disabled = True
         self.font_name = "data/fonts/Roboto-Regular.ttf"
@@ -528,7 +489,7 @@ class Cell(Button):
         self.color = (0,0,0,1)
         self.background_normal = "down.png"
 
-    def display_one(self):
+    def displayOne(self):
         """Displays the One"""
         self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
@@ -538,7 +499,7 @@ class Cell(Button):
         self.bold = True
         self.background_normal = "down.png"
 
-    def display_two(self):
+    def displayTwo(self):
         """Displays the Two"""
         self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
@@ -547,7 +508,7 @@ class Cell(Button):
         self.color = two_color
         self.background_normal = "down.png"
 
-    def display_three(self):
+    def displayThree(self):
         """Displays the Three"""
         self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
@@ -556,7 +517,7 @@ class Cell(Button):
         self.color = three_color
         self.background_normal = "down.png"
 
-    def display_four(self):
+    def displayFour(self):
         """Displays the Four"""
         self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
@@ -565,7 +526,7 @@ class Cell(Button):
         self.color = four_color
         self.background_normal = "down.png"
     
-    def display_five(self):
+    def displayFive(self):
         """Displays the Five"""
         self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
@@ -574,7 +535,7 @@ class Cell(Button):
         self.color = five_color
         self.background_normal = "down.png"
 
-    def display_six(self):
+    def displaySix(self):
         """Displays the Six"""
         self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
@@ -583,7 +544,7 @@ class Cell(Button):
         self.color = six_color
         self.background_normal = "down.png"
 
-    def display_seven(self):
+    def displaySeven(self):
         """Displays the Seven"""
         self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
@@ -592,7 +553,7 @@ class Cell(Button):
         self.color = seven_color
         self.background_normal = "down.png"
 
-    def display_eight(self):
+    def displayEight(self):
         """Displays the Eight"""
         self.disabled = False
         self.font_name = "data/fonts/Roboto-Regular.ttf"
@@ -603,7 +564,7 @@ class Cell(Button):
     
     def conceal(self):
         """Makes the Cell text blank"""
-        self.display_zero()
+        self.displayZero()
         self.disabled = False
         self.background_normal = "normal.png"
     
@@ -612,10 +573,10 @@ class Cell(Button):
         if self.is_revealed:
             return
         if self.is_flagged and self.is_bomb:
-            self.display_flag()
+            self.displayFlag()
             return
         self.is_revealed = True
-        display_list = [self.display_zero, self.display_one, self.display_two, self.display_three, self.display_four, self.display_five, self.display_six, self.display_seven, self.display_eight ]
+        display_list = [self.displayZero, self.displayOne, self.displayTwo, self.displayThree, self.displayFour, self.displayFive, self.displaySix, self.displaySeven, self.displayEight ]
         bomb_neighbours = self.getBombNeighbours()
 
         # Prevents a 3x3 square of bombs
@@ -623,24 +584,25 @@ class Cell(Button):
             self.is_bomb = False
         
         if self.is_bomb:
-            self.display_bomb()
+            self.displayBomb()
         else:
             display_list[bomb_neighbours]()
     
     def reveal(self):
         """Reveals Cell"""
         self.is_revealed = True
-        display_list = [self.display_zero, self.display_one, self.display_two, self.display_three, self.display_four, self.display_five, self.display_six, self.display_seven, self.display_eight ]
+        display_list = [self.displayZero, self.displayOne, self.displayTwo, self.displayThree, self.displayFour, self.displayFive, self.displaySix, self.displaySeven, self.displayEight ]
         bomb_neighbours = self.getBombNeighbours()
 
         if self.is_bomb and self.is_flagged:
-            self.display_flag()
+            self.displayFlag()
         elif self.is_bomb:
-            self.display_bomb()
+            self.displayBomb()
         else:
             display_list[bomb_neighbours]()
     
     def cascade(self):
+        """Reveals Cell and reveals orthogonal Cells"""
         if self.is_bomb:
             self.game_board.lose()
             return
